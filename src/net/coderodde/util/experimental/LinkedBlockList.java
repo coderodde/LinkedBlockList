@@ -59,7 +59,7 @@ public final class LinkedBlockList<T> {
         }
         
         T get(int index) {
-            return array[(headIndex + index) & capacity];
+            return array[(headIndex + index) & indexMask];
         }
     }
     
@@ -155,7 +155,7 @@ public final class LinkedBlockList<T> {
                 
                 for (int newBlockIndex = index; 
                          newBlockIndex < blockCapacity;
-                         newBlockIndex++, targetIndex++) {
+                         newBlockIndex++) {
                     newBlock.array[targetIndex] = block.get(newBlockIndex);
                     targetIndex++;
                 }
@@ -187,7 +187,7 @@ public final class LinkedBlockList<T> {
                     // TODO: (sourceIndex - 1) & blockCapacity?
                     int targetIndex = 
                             (block.headIndex + elementIndex - 1) 
-                            & blockCapacity;
+                            & indexMask;
                     
                     block.array[targetIndex] = block.array[sourceIndex];
                 }
@@ -200,11 +200,11 @@ public final class LinkedBlockList<T> {
                 for (int i = 0; i < elementsOnRight; i++) {
                     int sourceIndex = 
                             (block.headIndex + block.size - i - 1) 
-                            & blockCapacity;
+                            & indexMask;
                     
                     int targetIndex = 
                             (block.headIndex + block.size - i) 
-                            & blockCapacity;
+                            & indexMask;
                     
                     block.array[targetIndex] = block.array[sourceIndex];
                 }
