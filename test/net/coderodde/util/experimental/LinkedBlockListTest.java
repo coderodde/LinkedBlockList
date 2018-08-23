@@ -91,29 +91,27 @@ public class LinkedBlockListTest {
     
     @Test
     public void bruteForceTest() {
-        long seed = 1535020683908L;System.currentTimeMillis();
+        long seed = System.currentTimeMillis();
         Random random = new Random(seed);
         
         System.out.println("Seed = " + seed);
         
         List<Integer> javaList = new LinkedList<>();
-        LinkedBlockList<Integer> fingerList = new LinkedBlockList<>();
+        LinkedBlockList<Integer> linkedBlockList = new LinkedBlockList<>();
         
         for (int operationNumber = 0; 
                  operationNumber < 10_000; 
                  operationNumber++) {
             int operationCode = random.nextInt(3);
-            System.out.print(operationNumber + " ");
             switch (operationCode) {
                 // Remove:
                 case 0:
                     if (javaList.size() > 0) {
-                        System.out.print("remove ");
                         int index = random.nextInt(javaList.size());
                         javaList.remove(index);
                         
                         try {
-                            fingerList.remove(index);
+                            linkedBlockList.remove(index);
                             System.out.println();
                         } catch (Exception ex) {
                             System.out.println(
@@ -121,7 +119,7 @@ public class LinkedBlockListTest {
                                     operationNumber + " in remove()");
                         }
                         
-                        if (!equals(javaList, fingerList)) {
+                        if (!equals(javaList, linkedBlockList)) {
                             fail("Failed while removing at index " + index);
                         }
                     } else {
@@ -134,14 +132,13 @@ public class LinkedBlockListTest {
                 case 1:
                     
                     if (javaList.size() < 10) {
-                        System.out.print("add ");
                         // Do not create large lists, max. 10 elements.
                         Integer integer = random.nextInt(1000);
                         int index = random.nextInt(javaList.size() + 1);
                         javaList.add(index, integer);
                         
                         try {
-                            fingerList.add(index, integer);
+                            linkedBlockList.add(index, integer);
                             System.out.println();
                         } catch (Exception ex) {
                             System.out.println(
@@ -149,7 +146,7 @@ public class LinkedBlockListTest {
                                     operationNumber + " in add()");
                         }
 
-                        if (!equals(javaList, fingerList)) {
+                        if (!equals(javaList, linkedBlockList)) {
                             fail("Failed while adding at index " + index + 
                                  " value " + integer);
                         }
@@ -163,10 +160,9 @@ public class LinkedBlockListTest {
                 case 2:
                     
                     if (javaList.size() > 0) {
-                        System.out.println("get "); 
                         int index = random.nextInt(javaList.size());
                         int javaListInt = javaList.get(index);
-                        int fingerListInt = fingerList.get(index);
+                        int fingerListInt = linkedBlockList.get(index);
 
                         if (javaListInt != fingerListInt) {
                             fail("Failed while getting at index " + index +
