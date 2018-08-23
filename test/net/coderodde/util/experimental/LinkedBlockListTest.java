@@ -29,7 +29,7 @@ public class LinkedBlockListTest {
         list.add(0, 1);
         list.add(0, 0);
         list.add(2, 2);
-        list.add(2, 3);
+        list.add(2, 3); // 0, 1, 3, 2
         
         assertEquals(0, (int) list.get(0));
         assertEquals(1, (int) list.get(1));
@@ -37,8 +37,26 @@ public class LinkedBlockListTest {
         assertEquals(2, (int) list.get(3));
         
         list.add(2, 10);
-        
+        // Here, list = [0, 1, 10, 3, 2]
         assertEquals(10, (int) list.get(2));
+    }
+    
+    @Test
+    public void test3() {
+        for (int i = 0; i < 4; i++) {
+            list.add(i, i);
+        }
         
+        list.add(1, 10);
+        
+        assertEquals(0,  (int) list.get(0));
+        assertEquals(10, (int) list.get(1));
+        assertEquals(1,  (int) list.get(2));
+        assertEquals(2,  (int) list.get(3));
+        assertEquals(3,  (int) list.get(4));
+        // [0, 10, 1, 2, 3]
+        list.add(3, -1);
+        // [0, 10, 1, -1, 2, 3]
+        assertEquals(-1, (int) list.get(3));
     }
 }

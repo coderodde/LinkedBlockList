@@ -58,8 +58,32 @@ public final class LinkedBlockList<T> {
             this.array = (T[]) new Object[capacity];
         }
         
-        T get(int index) {
-            return array[(headIndex + index) & indexMask];
+        T get(int logicalIndex) {
+            return array[(headIndex + logicalIndex) & indexMask];
+        }
+        
+        void setNull(int logicalIndex) {
+            array[(headIndex + logicalIndex) & indexMask] = null;
+        }
+        
+        // Shifts 'elementsToShift' elements starting from logical index
+        // 'startIndex' one position to the left.
+        void shiftToLeft(int startIndex, int elementsToShift) {
+            for (int elementsShifted = 0;
+                     elementsShifted < elementsToShift;
+                     elementsShifted++) {
+                array[(startIndex + elementsShifted - 1) & indexMask] =
+                        array[(startIndex + elementsShifted) & indexMask];
+            }
+        }
+        
+        void shiftToRight(int startIndex, int elementsToShift) {
+            for (int elementsShifted = 0;
+                     elementsShifted < elementsToShift;
+                     elementsShifted++) {
+                array[(startIndex + elementsShifted) & indexMask] =
+                        array[(startIndex + elementsShifted - 1) & indexMask];
+            }
         }
     }
     
@@ -128,20 +152,24 @@ public final class LinkedBlockList<T> {
             int elementsOnRight = block.size - index;
             Block<T> newBlock = new Block<>(blockCapacity);
             
-            if (index < elementsOnLeft) {
+            if (elementsOnLeft < elementsOnRight) {
                 // Add newBlock before block and move to it the prefix of the
                 // current block and append the new element:
                 for (int newBlockIndex = 0; 
                          newBlockIndex < elementsOnLeft; 
                          newBlockIndex++) {
                     newBlock.array[newBlockIndex] = block.get(newBlockIndex);
+                    block.setNull(newBlockIndex);
                 }
                 
-                newBlock.array[index] = element;
+                newBlock.array[elementsOnLeft] = element;
                 newBlock.size = elementsOnLeft + 1;
                 newBlock.nextBlock = block;
                 newBlock.previousBlock = block.previousBlock;
                 block.previousBlock = newBlock;
+                block.size -= elementsOnLeft;
+                block.headIndex = 
+                        (block.headIndex + elementsOnLeft) & indexMask;
                 
                 if (newBlock.previousBlock == null) {
                     headBlock = newBlock;
@@ -149,18 +177,18 @@ public final class LinkedBlockList<T> {
                     newBlock.previousBlock.nextBlock = newBlock;
                 }
             } else {
-                // Add newBlock after block and move to it the suffix of the 
-                // current block and prepend the new element:
-                int targetIndex = 0;
+                block.size -= elementsOnRight;
+                newBlock.array[0] = element;
+                int targetIndex = 1;
                 
                 for (int newBlockIndex = index; 
-                         newBlockIndex < blockCapacity;
+                         newBlockIndex < elementsOnRight;
                          newBlockIndex++) {
                     newBlock.array[targetIndex] = block.get(newBlockIndex);
+                    block.setNull(newBlockIndex);
                     targetIndex++;
                 }
                 
-                newBlock.array[targetIndex] = element;
                 newBlock.size = elementsOnRight + 1;
                 newBlock.previousBlock = block;
                 newBlock.nextBlock = block.nextBlock;
@@ -177,14 +205,15 @@ public final class LinkedBlockList<T> {
             int elementsOnLeft = index;
             int elementsOnRight = block.size - index;
             
-            if (index < elementsOnLeft) {
+            if (elementsOnLeft < elementsOnRight) {
                 // Shift the leftmost elements one position to the left:
-                for (int elementIndex = 0; 0 < elementsOnLeft; elementIndex++) {
+                for (int elementIndex = 0; 
+                         elementIndex < elementsOnLeft; 
+                         elementIndex++) {
                     int sourceIndex = 
                             (block.headIndex + elementIndex) 
                             & indexMask;
                     
-                    // TODO: (sourceIndex - 1) & blockCapacity?
                     int targetIndex = 
                             (block.headIndex + elementIndex - 1) 
                             & indexMask;
@@ -192,18 +221,21 @@ public final class LinkedBlockList<T> {
                     block.array[targetIndex] = block.array[sourceIndex];
                 }
                 
-                block.array[(block.headIndex + index) & indexMask] = element;
+                int newHeadIndex = (block.headIndex + index - 1) & indexMask;
+                block.array[newHeadIndex] = element;
                 block.headIndex = (block.headIndex - 1) & indexMask;
                 block.size++;
             } else {
                 // Shift the rightmost elements one position to the right:
-                for (int i = 0; i < elementsOnRight; i++) {
+                for (int elementIndex = 0;
+                         elementIndex < elementsOnRight; 
+                         elementIndex++) {
                     int sourceIndex = 
-                            (block.headIndex + block.size - i - 1) 
+                            (block.headIndex + block.size - elementIndex - 1) 
                             & indexMask;
                     
                     int targetIndex = 
-                            (block.headIndex + block.size - i) 
+                            (block.headIndex + block.size - elementIndex) 
                             & indexMask;
                     
                     block.array[targetIndex] = block.array[sourceIndex];
@@ -226,7 +258,7 @@ public final class LinkedBlockList<T> {
             block = block.nextBlock;
         }
         
-        return block.array[index];
+        return block.get(index);
     }
     
     public void remove(int index) {
