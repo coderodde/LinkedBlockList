@@ -1,5 +1,11 @@
 package net.coderodde.util.experimental;
 
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Objects;
+import java.util.Random;
+import static junit.framework.Assert.fail;
 import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -80,5 +86,121 @@ public class LinkedBlockListTest {
         assertEquals(-1, (int) list.get(0));
         
         
+    }
+    
+    
+    @Test
+    public void bruteForceTest() {
+        long seed = 1535020683908L;System.currentTimeMillis();
+        Random random = new Random(seed);
+        
+        System.out.println("Seed = " + seed);
+        
+        List<Integer> javaList = new LinkedList<>();
+        LinkedBlockList<Integer> fingerList = new LinkedBlockList<>();
+        
+        for (int operationNumber = 0; 
+                 operationNumber < 10_000; 
+                 operationNumber++) {
+            int operationCode = random.nextInt(3);
+            System.out.print(operationNumber + " ");
+            switch (operationCode) {
+                // Remove:
+                case 0:
+                    if (javaList.size() > 0) {
+                        System.out.print("remove ");
+                        int index = random.nextInt(javaList.size());
+                        javaList.remove(index);
+                        
+                        try {
+                            fingerList.remove(index);
+                            System.out.println();
+                        } catch (Exception ex) {
+                            System.out.println(
+                                    ex.getMessage() + " on " + 
+                                    operationNumber + " in remove()");
+                        }
+                        
+                        if (!equals(javaList, fingerList)) {
+                            fail("Failed while removing at index " + index);
+                        }
+                    } else {
+                        System.out.println();
+                    }
+                    
+                    break;
+                    
+                // Add:
+                case 1:
+                    
+                    if (javaList.size() < 10) {
+                        System.out.print("add ");
+                        // Do not create large lists, max. 10 elements.
+                        Integer integer = random.nextInt(1000);
+                        int index = random.nextInt(javaList.size() + 1);
+                        javaList.add(index, integer);
+                        
+                        try {
+                            fingerList.add(index, integer);
+                            System.out.println();
+                        } catch (Exception ex) {
+                            System.out.println(
+                                    ex.getMessage() + " on " + 
+                                    operationNumber + " in add()");
+                        }
+
+                        if (!equals(javaList, fingerList)) {
+                            fail("Failed while adding at index " + index + 
+                                 " value " + integer);
+                        }
+                    } else {
+                        System.out.println();
+                    }
+                    
+                    break;
+                    
+                // Get:
+                case 2:
+                    
+                    if (javaList.size() > 0) {
+                        System.out.println("get "); 
+                        int index = random.nextInt(javaList.size());
+                        int javaListInt = javaList.get(index);
+                        int fingerListInt = fingerList.get(index);
+
+                        if (javaListInt != fingerListInt) {
+                            fail("Failed while getting at index " + index +
+                                 ", " + javaListInt + " vs. " + fingerListInt);
+                        }
+                    } else {
+                        System.out.println();
+                    }
+                    
+                    break;
+            }
+        }
+    }
+    
+    private static boolean equals(List<Integer> javaList,
+                                  LinkedBlockList<Integer> linkedBlockList) {
+        if (javaList.size() != linkedBlockList.size()) {
+            return false;
+        }
+        
+        Iterator<Integer> javaListIterator = javaList.iterator();
+        int fingerListIndex = 0;
+        
+        while (javaListIterator.hasNext()) {
+            Integer javaListInteger = javaListIterator.next();
+            Integer fingerListInteger = linkedBlockList.get(fingerListIndex);
+            
+            if (!Objects.equals(javaListInteger, fingerListInteger)) {
+                return false;
+            }
+            
+            fingerListIndex++;
+        }
+        
+        return true;
     }
 }

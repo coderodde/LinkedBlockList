@@ -275,15 +275,21 @@ public final class LinkedBlockList<T> {
             // chain of blocks:
             if (targetBlock == headBlock) {
                 headBlock = headBlock.nextBlock;
-                headBlock.previousBlock = null;
+                
+                if (headBlock != null) {
+                    headBlock.previousBlock = null;                    
+                }
             } else {
                 targetBlock.previousBlock.nextBlock = targetBlock.nextBlock;
             }
             
             if (targetBlock == tailBlock) {
                 tailBlock = tailBlock.previousBlock;
-                tailBlock.nextBlock = null;
-            }  else {
+                
+                if (tailBlock != null) {
+                    tailBlock.nextBlock = null;
+                }
+            } else {
                 targetBlock.nextBlock.previousBlock = targetBlock.previousBlock;
             }
         } else {
