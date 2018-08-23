@@ -58,5 +58,27 @@ public class LinkedBlockListTest {
         list.add(3, -1);
         // [0, 10, 1, -1, 2, 3]
         assertEquals(-1, (int) list.get(3));
+        
+        list.remove(2);
+        // [0, 10, -1, 2, 3]
+        assertEquals(-1, (int) list.get(2));
+        
+        list.remove(0);
+        // [10, -1, 2, 3]
+        assertEquals(10, (int) list.get(0));
+        
+        list.remove(0);
+        // [-1, 2, 3]
+        assertEquals(-1, (int) list.get(0));
+        
+        list.remove(2);
+        // [-1, 2]
+        assertEquals(-1, (int) list.get(0));
+        assertEquals(2, (int) list.get(1));
+        
+        list.remove(1);
+        assertEquals(-1, (int) list.get(0));
+        
+        
     }
 }

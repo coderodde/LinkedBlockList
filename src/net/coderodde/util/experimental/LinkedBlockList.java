@@ -221,8 +221,8 @@ public final class LinkedBlockList<T> {
                     block.array[targetIndex] = block.array[sourceIndex];
                 }
                 
-                int newHeadIndex = (block.headIndex + index - 1) & indexMask;
-                block.array[newHeadIndex] = element;
+                block.array[(block.headIndex + index - 1) & indexMask] =
+                        element;
                 block.headIndex = (block.headIndex - 1) & indexMask;
                 block.size++;
             } else {
@@ -263,6 +263,64 @@ public final class LinkedBlockList<T> {
     
     public void remove(int index) {
         checkAccessIndex(index);
+        Block<T> targetBlock = headBlock;
+        
+        while (index >= targetBlock.size) {
+            index -= targetBlock.size;
+            targetBlock = targetBlock.nextBlock;
+        }
+        
+        if (targetBlock.size == 1) {
+            // The target block contains only one element. Unlink it from the
+            // chain of blocks:
+            if (targetBlock == headBlock) {
+                headBlock = headBlock.nextBlock;
+                headBlock.previousBlock = null;
+            } else {
+                targetBlock.previousBlock.nextBlock = targetBlock.nextBlock;
+            }
+            
+            if (targetBlock == tailBlock) {
+                tailBlock = tailBlock.previousBlock;
+                tailBlock.nextBlock = null;
+            }  else {
+                targetBlock.nextBlock.previousBlock = targetBlock.previousBlock;
+            }
+        } else {
+            int elementsOnLeft = index;
+            int elementsOnRight = targetBlock.size - index - 1;
+            
+            if (elementsOnLeft < elementsOnRight) {
+                // Shift the leftmost elements in the target block one position
+                // to the right:
+                for (int i = index - 1; i >= 0; i--) {
+                    int sourceIndex = (targetBlock.headIndex + i) & indexMask;
+                    int targetIndex = (targetBlock.headIndex + i + 1) 
+                            & indexMask;
+                    targetBlock.array[targetIndex] = 
+                            targetBlock.array[sourceIndex];
+                }
+                
+                targetBlock.setNull(0);
+                targetBlock.headIndex = (targetBlock.headIndex + 1) & indexMask;
+                targetBlock.size--;
+            } else {
+                // Shift the rightmost elements in the target block one position
+                // to the left:
+                for (int i = index + 1; i < targetBlock.size; i++) {
+                    int sourceIndex = (targetBlock.headIndex + i) & indexMask;
+                    int targetIndex = (targetBlock.headIndex + i - 1) 
+                            & indexMask;
+                    targetBlock.array[targetIndex] = 
+                            targetBlock.array[sourceIndex];
+                }
+                
+                targetBlock.size--;
+                targetBlock.setNull(targetBlock.size);
+            }
+        }
+        
+        size--;
     }
     
     public int size() {
@@ -277,22 +335,6 @@ public final class LinkedBlockList<T> {
      */
     public float getDensityFactor() {
         return ((float) size) / blocks * blockCapacity;
-    }
-    
-    boolean hasValidState() {
-        int countedSize = 0;
-        
-        for (Block<T> block = headBlock; 
-                block != null; 
-                block = block.nextBlock) {
-            countedSize += block.size;
-        }
-        
-        if (countedSize != size) {
-            return false;
-        }
-        
-        return true;
     }
     
     private void checkAccessIndex(int index) {
